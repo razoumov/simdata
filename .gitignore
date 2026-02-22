@@ -1,5 +1,9 @@
+.DS_Store
 *.mkv
 *.mp4
 acoustic2D
 acoustic2D.jl
 nipy_spectral.csv
+data/
+prediction.png
+unet_model_weights*.pkl
