@@ -185,7 +185,7 @@ MAIN_KEY = jax.random.PRNGKey(0)
 key, init_key, dropout_key = jax.random.split(MAIN_KEY, 3)
 
 # instantiate the model and dummy input
-model = UNet()
+model = UNet(base_features=32)
 dummy_input = jnp.zeros((1, H, W, C)) 
 
 # Perform initialization, which requires a dummy input and an RNG key
