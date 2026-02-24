@@ -46,7 +46,7 @@ class UNet(nn.Module):
 class TrainState(train_state.TrainState):
     batch_stats: dict
 
-with open("23909855/weights009.pkl", 'rb') as f:
+with open("weights009.pkl", 'rb') as f:
     loaded_data = pickle.load(f)
 
 key = jax.random.PRNGKey(42)   # needed for initialization, but its value doesn't matter here

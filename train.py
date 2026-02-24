@@ -33,11 +33,8 @@ class UNet(nn.Module):
         c2 = ConvBlock(features=64)(d2, training=training)
         c_bottleneck = ConvBlock(features=128)(c2, training=training)
         target_shape = c1.shape[1:3]  # Should be (501, 501)
-        u1 = jax.image.resize(
-            c_bottleneck, 
-            shape=(c_bottleneck.shape[0], target_shape[0], target_shape[1], 64), 
-            method='nearest'
-        )
+        u1 = jax.image.resize(c_bottleneck, shape=(c_bottleneck.shape[0], target_shape[0],
+                                                   target_shape[1], 64), method='nearest')
         u1 = nn.Conv(features=64, kernel_size=(2, 2), padding='SAME')(u1)
         u1 = nn.relu(u1) # u1 shape: (B, 501, 501, 64)
         u1 = jnp.concatenate([u1, c1], axis=-1)
@@ -57,9 +54,7 @@ class TrainState(train_state.TrainState):
 def loss_fn(params, batch_stats, rng, inputs, targets, model, is_training):
     # Apply the model
     variables = {'params': params, 'batch_stats': batch_stats}
-    (logits, new_model_state) = model.apply(
-        variables, inputs, training=is_training, mutable=['batch_stats']
-    )
+    (logits, new_model_state) = model.apply(variables, inputs, training=is_training, mutable=['batch_stats'])
     # Mean Squared Error Loss
     loss = jnp.mean(jnp.square(logits - targets))
     return loss, (logits, new_model_state)
@@ -129,6 +124,9 @@ init_variables = model.init(
     training=True # Important: Use training=True for initial Batch Norm states
 )
 
+# initializes an Adam optimizer (standard optimization library for JAX; Stochastic Gradient Descent)
+# learning_rate is the step size
+# learning_rate=1e-4 is a very common starting point: small enough to avoid overshooting, large enough to make progress
 optimizer = optax.adam(learning_rate=1e-4)
 
 # create the initial training state
