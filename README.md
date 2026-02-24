@@ -1,4 +1,4 @@
-Initial setup:
+## Initial setup
 
 ```sh
 git clone https://github.com/razoumov/simdata
@@ -38,3 +38,42 @@ Naming scheme:
 - 0079 is the frame number for this run
 
 In production runs, you will see only files `*0000.png` (initial conditions) and `*0001.png` (result).
+
+## Create training and test data
+
+```sh
+mkdir data/{training,testing}
+./acoustic2D --model=8 --nruns=1000   # two files per run
+./acoustic2D --model=9 --nruns=1000   # two files per run
+mv frame{8,9}????000{0,1}.png data/training
+./acoustic2D --model=8 --nt=0 --nruns=5   # just the initial conditions
+mv frame8000{1..5}0000.png data/testing
+```
+
+## Create Python virtual env
+
+```sh
+module load python/3.12.4
+python -m venv ~/env-jax
+source ~/env-jax/bin/activate
+python -m pip install --upgrade pip --no-index
+python -m pip install --no-index jax flax pillow matplotlib
+...
+deactivate
+```
+
+## Training
+
+```sh
+source ~/env-jax/bin/activate
+sbatch submit.sh
+```
+
+## Inference
+
+```sh
+source ~/env-jax/bin/activate
+python infer.py
+```
+
+Check the image `prediction.png`.
