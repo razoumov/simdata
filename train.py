@@ -2,6 +2,13 @@ import jax
 import jax.numpy as jnp
 from flax import linen as nn
 from typing import Sequence
+from flax.training import train_state
+import optax
+import glob
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+import pickle
 
 # The U-Net consists of an Encoder (downsampling path) and a Decoder (upsampling path) with skip connections.
 
@@ -40,7 +47,6 @@ class UNet(nn.Module):
 
 # Define the TrainState, to hold parameters and optimizer state:
 
-from flax.training import train_state
 class TrainState(train_state.TrainState):
     # Add batch_stats to track moving averages for Batch Normalization
     batch_stats: dict
@@ -48,7 +54,6 @@ class TrainState(train_state.TrainState):
 
 # For image-to-image regression, the Mean Squared Error (MSE) is a common and effective loss function:
 
-import optax
 def loss_fn(params, batch_stats, rng, inputs, targets, model, is_training):
     # Apply the model
     variables = {'params': params, 'batch_stats': batch_stats}
@@ -78,12 +83,9 @@ def train_step(state, batch):
 
 # Load the image pairs (In1​,Out1​) into NumPy arrays X_train and Y_train:
 
-import glob
-import numpy as np
-from PIL import Image
-
 # find all initial condition files matching frame8****0000.png
-dir = "/Users/razoumov/training/jax/"
+# dir = "/Users/razoumov/training/jax/"
+dir = "/scratch/razoumov/jax/"
 inputFiles = sorted(glob.glob(dir+"data/training/frame8*0000.png"))
 print(f"Found {len(inputFiles)} initial conditions to process.")
 
@@ -157,7 +159,7 @@ def data_generator(X, Y, batch_size):
         # Convert to JAX arrays before yielding
         yield jnp.asarray(X_batch), jnp.asarray(Y_batch)
 
-numEpochs = 1   # default 5
+numEpochs = 10
 print(f"Training will run for {numEpochs} epochs, with {numBatchesPerEpoch} steps per epoch.")
 
 # Finally, train the model:
@@ -179,8 +181,12 @@ for epoch in range(numEpochs):
             print(f"  Step {step+1}/{numBatchesPerEpoch} | Running Loss: {avg_loss_so_far:.6f}")
     avg_epoch_loss = total_loss / numBatchesPerEpoch
     print(f"Epoch {epoch + 1}/{numEpochs} Complete | Average Loss: {avg_epoch_loss:.6f}")
+    model_data = {'params': state.params, 'batch_stats': state.batch_stats} # data to save to disk
+    # use Python's pickle for simplicity, as JAX/Flax structures are tree-like
+    with open(dir+'weights%03d'%(epoch)+'.pkl', 'wb') as f: # default was `unet_model_weights.pkl`
+        pickle.dump(model_data, f)
 
-# Inference from memory
+# Inference from memory:
 
 # @jax.jit
 # def predict_step(state, inputs):
@@ -193,18 +199,7 @@ for epoch in range(numEpochs):
 # initialState = initialState.reshape(1, 501, 501, 1)
 # predictedSolution = predict_step(state, initialState).reshape(501, 501)
 
-# import matplotlib.pyplot as plt
 # fig, ax = plt.subplots(figsize=(8, 8))
 # cax = ax.imshow(predictedSolution, interpolation='nearest', cmap='viridis')
 # plt.savefig(dir+"000.png")
 # plt.close(fig)
-
-# Save the model to disk:
-
-import pickle
-
-model_data = {'params': state.params, 'batch_stats': state.batch_stats}
-
-# use Python's pickle for simplicity, as JAX/Flax structures are tree-like
-with open(dir+"../"+"unet_model_weights000.pkl", 'wb') as f:
-    pickle.dump(model_data, f)

@@ -46,7 +46,7 @@ class UNet(nn.Module):
 class TrainState(train_state.TrainState):
     batch_stats: dict
 
-with open("weights099.pkl", 'rb') as f:
+with open("23909855/weights009.pkl", 'rb') as f:
     loaded_data = pickle.load(f)
 
 key = jax.random.PRNGKey(42)   # needed for initialization, but its value doesn't matter here
@@ -63,7 +63,7 @@ loaded_state = TrainState.create(
     batch_stats=loaded_data['batch_stats'],
 )
 
-dir = "/Users/razoumov/training/jax/"
+dir = "/scratch/razoumov/jax/"
 initial = dir + "data/testing/frame800030000.png"
 img_x = Image.open(initial).convert('L')   # open image in grayscale (L) mode
 x_array = np.asarray(img_x, dtype=np.float32) / 255.0   # convert to NumPy array and normalize assuming 8-bit images

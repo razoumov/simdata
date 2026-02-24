@@ -6,4 +6,7 @@ acoustic2D.jl
 nipy_spectral.csv
 data/
 prediction.png
-unet_model_weights*.pkl
+*.pkl
+old/
+23870730/
+23909855/
