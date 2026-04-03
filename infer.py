@@ -9,6 +9,7 @@ import pickle
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 # # define ConvBlock, same as before
 # class ConvBlock(nn.Module):
@@ -118,7 +119,12 @@ class UNet(nn.Module):
 class TrainState(train_state.TrainState):
     batch_stats: dict
 
-with open("weights022.pkl", 'rb') as f:
+if len(sys.argv) < 2:
+    print("Usage: python script.py weights.pkl")
+    sys.exit(1)
+
+filename = sys.argv[1]
+with open(filename, 'rb') as f:
     loaded_data = pickle.load(f)
 
 key = jax.random.PRNGKey(42)   # needed for initialization, but its value doesn't matter here

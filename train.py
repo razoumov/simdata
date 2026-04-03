@@ -228,7 +228,7 @@ def data_generator(X, Y, batch_size):
         # Convert to JAX arrays before yielding
         yield jnp.asarray(X_batch), jnp.asarray(Y_batch)
 
-numEpochs = 50
+numEpochs = 10
 print(f"Training will run for {numEpochs} epochs, with {numBatchesPerEpoch} steps per epoch.")
 
 # Finally, train the model:
