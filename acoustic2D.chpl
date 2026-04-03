@@ -122,11 +122,18 @@ proc fourDigits(n: int) {
 }
 
 proc plotPressure(step,run) {
-  var smin = min reduce(P);
-  var smax = max reduce(P);
+  // var output: [largerMesh] real;
+  var output = P;
+  for (i,j) in output.domain {
+    if output[i,j] < 0.0 then output[i,j] = 0.0;
+    //if output[i,j] > 0.10 then output[i,j] = 1.0;
+  }
+  var smin = min reduce(output);
+  var smax = max reduce(output);
+  writeln(smin, "  ", smax);
   for i in 1..n {
     for j in 1..n {
-      var idx = ((P[j,n-i+1]-smin)/(smax-smin)*255):int + 1; //scale to 1..256
+      var idx = ((output[j,n-i+1]-smin)/(smax-smin)*255):int + 1; //scale to 1..256
       colour[i,j] = ((cmap[idx,1]*255):int, (cmap[idx,2]*255):int, (cmap[idx,3]*255):int);
     }
   }
