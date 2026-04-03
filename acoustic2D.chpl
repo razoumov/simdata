@@ -1,6 +1,6 @@
 use Image, Math, IO, sciplot, Time;
 use Random;
-config const n = 501, nt = 250, nout = 250; // resolution, max time steps, plotting frequency
+config const n = 500, nt = 250, nout = 250; // resolution, max time steps, plotting frequency
 const a = 0.1;   // 0.1 - thick front, no post-wave oscillations; 0.5 - narrow front, large oscillations
 config const animation = true;
 config const model = 1, nruns = 1;
