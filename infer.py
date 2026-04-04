@@ -5,6 +5,7 @@ import orbax.checkpoint as ocp
 from PIL import Image
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
+import sys
 
 # Define the model
 
