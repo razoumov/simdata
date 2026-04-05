@@ -35,26 +35,86 @@ print(f"Data shapes: X={X.shape}, Y={Y.shape}")
 # Define the model (NNX). We will build a simplified U-Net. NNX allows us to define models as Python classes
 # that hold their own state, making the code much cleaner than traditional functional JAX.
 
+# class UNet(nnx.Module):
+#     def __init__(self, in_features, out_features, rngs: nnx.Rngs):
+#         # Downsampling
+#         self.c1 = nnx.Conv(in_features, 32, kernel_size=(3, 3), rngs=rngs)
+#         self.c2 = nnx.Conv(32, 64, kernel_size=(3, 3), strides=2, rngs=rngs)
+#         # Bottleneck
+#         self.bottleneck = nnx.Conv(64, 64, kernel_size=(3, 3), rngs=rngs)
+#         # Upsampling
+#         self.up = nnx.ConvTranspose(64, 32, kernel_size=(3, 3), strides=2, rngs=rngs)
+#         self.out = nnx.Conv(32, out_features, kernel_size=(3, 3), rngs=rngs)
+#     def __call__(self, x):
+#         # Encoder
+#         x1 = nnx.relu(self.c1(x))
+#         x2 = nnx.relu(self.c2(x1))
+#         # Bottleneck
+#         x = nnx.relu(self.bottleneck(x2))
+#         # Decoder (Simplified skip connection logic)
+#         x = nnx.relu(self.up(x))
+#         # Ensure shapes match for a simple residual add or concatenation if needed
+#         return jax.nn.sigmoid(self.out(x)) # Sigmoid if data is normalized [0, 1]
+
+
+
+
+
+
+
+
+
+class UNetBlock(nnx.Module):
+    def __init__(self, in_chan, out_chan, rngs: nnx.Rngs, stride=1):
+        self.conv = nnx.Conv(in_chan, out_chan, kernel_size=(3, 3), strides=stride, padding='SAME', rngs=rngs)
+        self.bn = nnx.BatchNorm(out_chan, momentum=0.9, rngs=rngs)
+    def __call__(self, x):
+        x = self.conv(x)
+        x = self.bn(x)
+        return nnx.relu(x)
+
 class UNet(nnx.Module):
     def __init__(self, in_features, out_features, rngs: nnx.Rngs):
-        # Downsampling
-        self.c1 = nnx.Conv(in_features, 32, kernel_size=(3, 3), rngs=rngs)
-        self.c2 = nnx.Conv(32, 64, kernel_size=(3, 3), strides=2, rngs=rngs)
+        # Encoder (Downsampling)
+        self.enc1 = UNetBlock(in_features, 64, rngs)
+        self.enc2 = UNetBlock(64, 128, rngs, stride=2)
+        self.enc3 = UNetBlock(128, 256, rngs, stride=2)
+        self.enc4 = UNetBlock(256, 512, rngs, stride=2)
         # Bottleneck
-        self.bottleneck = nnx.Conv(64, 64, kernel_size=(3, 3), rngs=rngs)
-        # Upsampling
-        self.up = nnx.ConvTranspose(64, 32, kernel_size=(3, 3), strides=2, rngs=rngs)
-        self.out = nnx.Conv(32, out_features, kernel_size=(3, 3), rngs=rngs)
+        self.bottleneck = UNetBlock(512, 1024, rngs)
+        # Decoder (Upsampling)
+        self.up4 = nnx.ConvTranspose(1024, 512, kernel_size=(3, 3), strides=2, padding='SAME', rngs=rngs)
+        self.dec4 = UNetBlock(1024, 512, rngs) # 512 (up) + 512 (skip)
+        self.up3 = nnx.ConvTranspose(512, 256, kernel_size=(3, 3), strides=2, padding='SAME', rngs=rngs)
+        self.dec3 = UNetBlock(512, 256, rngs) # 256 (up) + 256 (skip)
+        self.up2 = nnx.ConvTranspose(256, 128, kernel_size=(3, 3), strides=2, padding='SAME', rngs=rngs)
+        self.dec2 = UNetBlock(256, 128, rngs) # 128 (up) + 128 (skip)
+        self.final_conv = nnx.Conv(128, out_features, kernel_size=(1, 1), rngs=rngs)
     def __call__(self, x):
-        # Encoder
-        x1 = nnx.relu(self.c1(x))
-        x2 = nnx.relu(self.c2(x1))
+        # Encoder path
+        s1 = self.enc1(x)
+        s2 = self.enc2(s1)
+        s3 = self.enc3(s2)
+        s4 = self.enc4(s3)
         # Bottleneck
-        x = nnx.relu(self.bottleneck(x2))
-        # Decoder (Simplified skip connection logic)
-        x = nnx.relu(self.up(x))
-        # Ensure shapes match for a simple residual add or concatenation if needed
-        return jax.nn.sigmoid(self.out(x)) # Sigmoid if data is normalized [0, 1]
+        b = self.bottleneck(s4)
+        # Decoder path with skip connections
+        x = self.up4(b)
+        x = jnp.concatenate([x, s4], axis=-1)
+        x = self.dec4(x)
+        x = self.up3(x)
+        x = jnp.concatenate([x, s3], axis=-1)
+        x = self.dec3(x)
+        x = self.up2(x)
+        x = jnp.concatenate([x, s2], axis=-1)
+        x = self.dec2(x)
+        # Map back to original resolution if needed (adding one more up-block)
+        # For 501x501, ensure your padding/strides align or use jax.image.resize
+        return jax.nn.sigmoid(self.final_conv(x))
+
+
+
+
 
 # The Training State and Loss Function. In NNX, we use a Trainer pattern or a simple loop. We'll use Optax for the optimizer.
 
@@ -67,16 +127,14 @@ optimizer = nnx.Optimizer(model, optax.adam(1e-3), wrt=nnx.Param)
 def train_step(model, optimizer, batch_x, batch_y):
     def loss_fn(model):
         y_pred = model(batch_x)
-        # Mean Squared Error for PDE residuals
-        return jnp.mean((y_pred - batch_y) ** 2)
+        return jnp.mean((y_pred - batch_y) ** 2)   # mean squared error for residuals
     loss, grads = nnx.value_and_grad(loss_fn)(model)
-    # NEW SYNTAX: Pass both model and grad
     optimizer.update(model, grads)
     return loss
 
 # The Training Loop. To keep it GPU-efficient, we slice our JAX arrays into mini-batches.
 
-numEpochs = 100   # 100 was suggested by Gemini
+numEpochs = 10   # 100 was suggested by Gemini
 batchSize = 8
 numSamples = X.shape[0]
 
