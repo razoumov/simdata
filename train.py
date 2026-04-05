@@ -62,8 +62,6 @@ print(f"Data shapes: X={X.shape}, Y={Y.shape}")
 
 
 
-
-
 class UNetBlock(nnx.Module):
     def __init__(self, in_chan, out_chan, rngs: nnx.Rngs, stride=1):
         self.conv = nnx.Conv(in_chan, out_chan, kernel_size=(3, 3), strides=stride, padding='SAME', rngs=rngs)
@@ -75,42 +73,52 @@ class UNetBlock(nnx.Module):
 
 class UNet(nnx.Module):
     def __init__(self, in_features, out_features, rngs: nnx.Rngs):
-        # Encoder (Downsampling)
-        self.enc1 = UNetBlock(in_features, 64, rngs)
-        self.enc2 = UNetBlock(64, 128, rngs, stride=2)
-        self.enc3 = UNetBlock(128, 256, rngs, stride=2)
-        self.enc4 = UNetBlock(256, 512, rngs, stride=2)
-        # Bottleneck
-        self.bottleneck = UNetBlock(512, 1024, rngs)
-        # Decoder (Upsampling)
-        self.up4 = nnx.ConvTranspose(1024, 512, kernel_size=(3, 3), strides=2, padding='SAME', rngs=rngs)
-        self.dec4 = UNetBlock(1024, 512, rngs) # 512 (up) + 512 (skip)
-        self.up3 = nnx.ConvTranspose(512, 256, kernel_size=(3, 3), strides=2, padding='SAME', rngs=rngs)
-        self.dec3 = UNetBlock(512, 256, rngs) # 256 (up) + 256 (skip)
-        self.up2 = nnx.ConvTranspose(256, 128, kernel_size=(3, 3), strides=2, padding='SAME', rngs=rngs)
-        self.dec2 = UNetBlock(256, 128, rngs) # 128 (up) + 128 (skip)
-        self.final_conv = nnx.Conv(128, out_features, kernel_size=(1, 1), rngs=rngs)
+        # Encoder: 32 -> 64 -> 128 -> 256
+        self.enc1 = UNetBlock(in_features, 32, rngs)
+        self.enc2 = UNetBlock(32, 64, rngs, stride=2)
+        self.enc3 = UNetBlock(64, 128, rngs, stride=2)
+        self.enc4 = UNetBlock(128, 256, rngs, stride=2)
+        # Bottleneck: capped at 512
+        self.bottleneck = UNetBlock(256, 512, rngs)
+        # Decoder
+        self.up4 = nnx.ConvTranspose(512, 256, kernel_size=(3, 3), strides=2, padding='SAME', rngs=rngs)
+        self.dec4 = UNetBlock(512, 256, rngs) # (256 up + 256 skip)
+        self.up3 = nnx.ConvTranspose(256, 128, kernel_size=(3, 3), strides=2, padding='SAME', rngs=rngs)
+        self.dec3 = UNetBlock(256, 128, rngs) # (128 up + 128 skip)
+        self.up2 = nnx.ConvTranspose(128, 64, kernel_size=(3, 3), strides=2, padding='SAME', rngs=rngs)
+        self.dec2 = UNetBlock(128, 64, rngs)  # (64 up + 64 skip)
+        self.final_conv = nnx.Conv(64, out_features, kernel_size=(1, 1), rngs=rngs)
     def __call__(self, x):
-        # Encoder path
+        # Encoder
         s1 = self.enc1(x)
         s2 = self.enc2(s1)
         s3 = self.enc3(s2)
         s4 = self.enc4(s3)
-        # Bottleneck
         b = self.bottleneck(s4)
-        # Decoder path with skip connections
-        x = self.up4(b)
-        x = jnp.concatenate([x, s4], axis=-1)
+        # Helper to handle the shape matching for skip connections
+        def upsample_and_concat(current, skip):
+            # current.shape[0] is batch, skip.shape[1:3] is HW, current.shape[-1] is C
+            target_shape = (current.shape[0], skip.shape[1], skip.shape[2], current.shape[3])
+            up = jax.image.resize(current, target_shape, method="bilinear")
+            return jnp.concatenate([up, skip], axis=-1)
+        # Decoder path
+        x = upsample_and_concat(self.up4(b), s4)
         x = self.dec4(x)
-        x = self.up3(x)
-        x = jnp.concatenate([x, s3], axis=-1)
+        x = upsample_and_concat(self.up3(x), s3)
         x = self.dec3(x)
-        x = self.up2(x)
-        x = jnp.concatenate([x, s2], axis=-1)
+        x = upsample_and_concat(self.up2(x), s2)
         x = self.dec2(x)
-        # Map back to original resolution if needed (adding one more up-block)
-        # For 501x501, ensure your padding/strides align or use jax.image.resize
+        # Final resize to exactly 500x500 before the last conv
+        final_shape = (x.shape[0], 500, 500, x.shape[3])
+        x = jax.image.resize(x, final_shape, method="bilinear")        
         return jax.nn.sigmoid(self.final_conv(x))
+
+
+
+
+
+
+
 
 
 
@@ -169,17 +177,16 @@ for epoch in range(numEpochs):
 
 
 
-# # Infer from memory
+# Infer from memory
 
-# test_input = X[0:1]
+img_x = Image.open(dir+'data/testing/frame800030000.png').convert('L')   # open image in grayscale (L) mode
+x_array = np.asarray(img_x, dtype=np.float32) / 255.0   # convert to NumPy array and normalize assuming 8-bit images
+initialState = jnp.array(x_array)[np.newaxis, ..., np.newaxis]
+# initialState = jnp.ones((1, 500, 500, 1))
+predictedSolution = predict(model, initialState).reshape(500, 500)
 
-# @nnx.jit
-# def predict(model, x):
-#     return model(x)
-
-# predictedSolution = predict(model, test_input).reshape(500, 500)
-
-# fig, ax = plt.subplots(figsize=(8, 8))
-# cax = ax.imshow(predictedSolution, interpolation='nearest', cmap='viridis')
-# plt.savefig(dir+"000.png")
-# plt.close(fig)
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(figsize=(8, 8))
+cax = ax.imshow(predictedSolution, interpolation='nearest', cmap='viridis')
+plt.savefig(dir+"prediction.png")
+plt.close(fig)
