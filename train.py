@@ -179,6 +179,10 @@ for epoch in range(numEpochs):
 
 # Infer from memory
 
+@nnx.jit
+def predict(model, x):
+    return model(x)
+
 img_x = Image.open(dir+'data/testing/frame800030000.png').convert('L')   # open image in grayscale (L) mode
 x_array = np.asarray(img_x, dtype=np.float32) / 255.0   # convert to NumPy array and normalize assuming 8-bit images
 initialState = jnp.array(x_array)[np.newaxis, ..., np.newaxis]
