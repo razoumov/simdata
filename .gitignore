@@ -5,11 +5,9 @@ acoustic2D
 acoustic2D.jl
 nipy_spectral.csv
 data/
-prediction.png
 *.pkl
 old/
 23870730/
 23909855/
-predict*.png
 slurm*.out
-p*.png
+*.png
