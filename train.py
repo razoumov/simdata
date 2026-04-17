@@ -142,7 +142,7 @@ def train_step(model, optimizer, batch_x, batch_y):
 
 # The Training Loop. To keep it GPU-efficient, we slice our JAX arrays into mini-batches.
 
-numEpochs = 10   # 100 was suggested by Gemini
+numEpochs = 50
 batchSize = 8
 numSamples = X.shape[0]
 
@@ -158,8 +158,8 @@ for epoch in range(numEpochs):
     print(f"Epoch {epoch}, loss: {np.mean(epoch_loss):.6f}")
     graph, state = nnx.split(model)   # extract the state from NNX
     checkpointer = ocp.StandardCheckpointer()
-    checkpointer.save('/scratch/razoumov/jax/weights%03d'%(epoch), state)
-
+    if (epoch+1)%10 == 0:
+        checkpointer.save('/scratch/razoumov/jax/weights%03d'%(epoch), state)
 
 
 

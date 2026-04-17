@@ -5,5 +5,7 @@
 #SBATCH --account=def-razoumov-ac
 #SBATCH --gpus-per-node=h100:1
 #SBATCH --reservation=gpu_mig_test
+#SBATCH --output=solution.out
 source ~/env-jax/bin/activate
+/bin/rm -rf prediction.png
 python train.py
