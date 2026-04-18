@@ -54,7 +54,7 @@ for run in 1..nruns {
     when 8 do {
       // 1-5 randomly placed points
       var rint = new randomStream(int);
-      var np = rint.next(min=1, max=1);   // default max=5
+      var np = rint.next(min=1, max=5);   // default max=5
       var rreal = new randomStream(real);
       var sources: [1..np] (real, real);
       for i in 1..np do
