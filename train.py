@@ -9,7 +9,7 @@ import orbax.checkpoint as ocp
 
 modelName = 3
 
-# Load the image pairs (In1​,Out1​) into NumPy arrays X_train and Y_train:
+# Load the image pairs (In1​,Out1​)
 
 # find all initial condition files matching frame8****0000.png
 dir = "/scratch/razoumov/jax/"
@@ -88,6 +88,7 @@ for epoch in range(numEpochs):
     graph, state = nnx.split(model)   # extract the state from NNX
     checkpointer = ocp.StandardCheckpointer()
     if (epoch+1)%10 == 0:
+        print('/scratch/razoumov/jax/weights%03d'%(epoch))
         checkpointer.save('/scratch/razoumov/jax/weights%03d'%(epoch), state)
 
 
