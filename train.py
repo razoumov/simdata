@@ -75,7 +75,7 @@ def train_step(model, optimizer, batch_x, batch_y):
 # The Training Loop. To keep it GPU-efficient, we slice our JAX arrays into mini-batches.
 # ---------------------------------------------------------
 
-numEpochs = 50  # 500 for a less noisy solution
+numEpochs = 500  # 500 default for a less noisy solution
 batchSize = 8
 numSamples = X.shape[0]
 
