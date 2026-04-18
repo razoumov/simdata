@@ -33,8 +33,8 @@ match modelName:
 # Read the checkpoint
 # ---------------------------------------------------------
 
-if len(sys.argv) < 2:
-    print("Usage: python script.py weightsDir")
+if len(sys.argv) < 3:
+    print("Usage: python script.py weightsDir initialImage.png")
     sys.exit(1)
 
 dirname = sys.argv[1]
@@ -52,7 +52,7 @@ nnx.update(model, restored_state)   # load back into the model
 def predict(model, x):
     return model(x)
 
-img_x = Image.open('data/testing/frame800010000.png').convert('L')   # open image in grayscale (L) mode
+img_x = Image.open(sys.argv[2]).convert('L')   # open image in grayscale (L) mode
 x_array = np.asarray(img_x, dtype=np.float32) / 255.0   # convert to NumPy array and normalize assuming 8-bit images
 initialState = jnp.array(x_array)[np.newaxis, ..., np.newaxis]
 # initialState = jnp.ones((1, 500, 500, 1))
