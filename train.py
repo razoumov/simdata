@@ -72,7 +72,7 @@ def train_step(model, optimizer, batch_x, batch_y):
 # The Training Loop. To keep it GPU-efficient, we slice our JAX arrays into mini-batches.
 # ---------------------------------------------------------
 
-numEpochs = 50
+numEpochs = 50  # 500 for a less noisy solution
 batchSize = 8
 numSamples = X.shape[0]
 
@@ -91,6 +91,8 @@ for epoch in range(numEpochs):
     if (epoch+1)%10 == 0:
         print('/scratch/razoumov/jax/weights%03d'%(epoch))
         checkpointer.save('/scratch/razoumov/jax/weights%03d'%(epoch), state)
+
+checkpointer.wait_until_finished()   # wait for the save thread to finish writing to disk
 
 # ---------------------------------------------------------
 # Read from checkpoint.
