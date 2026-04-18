@@ -177,20 +177,22 @@ for epoch in range(numEpochs):
 
 
 
-# Infer from memory
+# # Infer from memory
 
-@nnx.jit
-def predict(model, x):
-    return model(x)
+# @nnx.jit
+# def predict(model, x):
+#     return model(x)
 
-img_x = Image.open(dir+'data/testing/frame800030000.png').convert('L')   # open image in grayscale (L) mode
-x_array = np.asarray(img_x, dtype=np.float32) / 255.0   # convert to NumPy array and normalize assuming 8-bit images
-initialState = jnp.array(x_array)[np.newaxis, ..., np.newaxis]
-# initialState = jnp.ones((1, 500, 500, 1))
-predictedSolution = predict(model, initialState).reshape(500, 500)
+# img_x = Image.open(dir+'data/testing/frame800030000.png').convert('L')   # open image in grayscale (L) mode
+# x_array = np.asarray(img_x, dtype=np.float32) / 255.0   # convert to NumPy array and normalize assuming 8-bit images
+# initialState = jnp.array(x_array)[np.newaxis, ..., np.newaxis]
+# # initialState = jnp.ones((1, 500, 500, 1))
+# predictedSolution = predict(model, initialState).reshape(500, 500)
 
-import matplotlib.pyplot as plt
-fig, ax = plt.subplots(figsize=(8, 8))
-cax = ax.imshow(predictedSolution, interpolation='nearest', cmap='viridis')
-plt.savefig(dir+"prediction.png")
-plt.close(fig)
+# import matplotlib.pyplot as plt
+# fig = plt.figure(figsize=(5, 5), dpi=100)
+# ax = fig.add_axes([0, 0, 1, 1])
+# ax.imshow(predictedSolution, interpolation='nearest', cmap='viridis')
+# ax.axis('off')
+# plt.savefig(dir + "prediction.png", pad_inches=0)
+# plt.close()
