@@ -1,3 +1,7 @@
+import jax
+import jax.numpy as jnp
+from flax import nnx
+
 # ---------------------------------------------------------
 # 1. Spectral Convolution Layer (The core of FNO)
 # ---------------------------------------------------------
