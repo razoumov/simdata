@@ -6,6 +6,7 @@ from PIL import Image
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import sys
+from pathlib import Path
 
 modelName = 3
 
@@ -37,10 +38,10 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 dirname = sys.argv[1]
-dir = "/scratch/razoumov/jax/"
+currentPath = str(Path('.').resolve()) + '/'
 checkpointer = ocp.StandardCheckpointer()
 graph, state = nnx.split(model)
-restored_state = checkpointer.restore(dir+dirname, target=state)   # restore the state
+restored_state = checkpointer.restore(currentPath+dirname, target=state)   # restore the state
 nnx.update(model, restored_state)   # load back into the model
 
 # ---------------------------------------------------------
@@ -51,7 +52,7 @@ nnx.update(model, restored_state)   # load back into the model
 def predict(model, x):
     return model(x)
 
-img_x = Image.open(dir+'data/testing/frame800030000.png').convert('L')   # open image in grayscale (L) mode
+img_x = Image.open('data/testing/frame800010000.png').convert('L')   # open image in grayscale (L) mode
 x_array = np.asarray(img_x, dtype=np.float32) / 255.0   # convert to NumPy array and normalize assuming 8-bit images
 initialState = jnp.array(x_array)[np.newaxis, ..., np.newaxis]
 # initialState = jnp.ones((1, 500, 500, 1))
@@ -61,5 +62,5 @@ fig = plt.figure(figsize=(5, 5), dpi=100)
 ax = fig.add_axes([0, 0, 1, 1])
 ax.imshow(predictedSolution, interpolation='nearest', cmap='viridis')
 ax.axis('off')
-plt.savefig(dir + "prediction.png", pad_inches=0)
+plt.savefig("prediction.png", pad_inches=0)
 plt.close()
