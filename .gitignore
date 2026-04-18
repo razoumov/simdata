@@ -12,3 +12,5 @@ old/
 9???????
 slurm*.out
 *.png
+__pycache__
+*.pdf
