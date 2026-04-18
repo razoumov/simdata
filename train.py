@@ -9,7 +9,9 @@ import orbax.checkpoint as ocp
 
 modelName = 3
 
-# Load the image pairs (In1​,Out1​)
+# ---------------------------------------------------------
+# Load the image pairs for training.
+# ---------------------------------------------------------
 
 # find all initial condition files matching frame8****0000.png
 dir = "/scratch/razoumov/jax/"
@@ -34,29 +36,28 @@ X = jnp.array(X_list)[..., jnp.newaxis]
 Y = jnp.array(Y_list)[..., jnp.newaxis]
 print(f"Data shapes: X={X.shape}, Y={Y.shape}")
 
-# Define the model
+# ---------------------------------------------------------
+# Define and initialize the model and the optimizer.
+# ---------------------------------------------------------
 
 match modelName:
     case 1:
         from unetSimple import UNet
     case 2:
         from unetComplex import UNet, UNetBlock
-    case 3:
-        from fourier import SpectralConv2d, FNO2d
-
-# initialize model and optimizer
-match modelName:
-    case 2:
         rngs = nnx.Rngs(0)
         model = UNet(in_features=1, out_features=1, rngs=rngs)
         optimizer = nnx.Optimizer(model, optax.adam(1e-3), wrt=nnx.Param)
     case 3:
+        from fourier import SpectralConv2d, FNO2d
         modes, width, learning_rate = 12, 32, 1e-3
         rngs = nnx.Rngs(params=0)
         model = FNO2d(modes, width, in_channels=1, out_channels=1, rngs=rngs)
         optimizer = nnx.Optimizer(model, optax.adam(learning_rate), wrt=nnx.Param)
 
-# define the training function
+# ---------------------------------------------------------
+# Define the training function.
+# ---------------------------------------------------------
 
 @nnx.jit
 def train_step(model, optimizer, batch_x, batch_y):
@@ -91,14 +92,9 @@ for epoch in range(numEpochs):
         print('/scratch/razoumov/jax/weights%03d'%(epoch))
         checkpointer.save('/scratch/razoumov/jax/weights%03d'%(epoch), state)
 
-
-
-
-
-
-
-
-# Read from checkpoint
+# ---------------------------------------------------------
+# Read from checkpoint.
+# ---------------------------------------------------------
 
 # dirname="weights009"
 # dir = "/scratch/razoumov/jax/"
@@ -107,12 +103,9 @@ for epoch in range(numEpochs):
 # restored_state = checkpointer.restore(dir+dirname, target=state)   # restore the state
 # nnx.update(model, restored_state)   # load back into the model
 
-
-
-
-
-
-# # Infer from memory
+# ---------------------------------------------------------
+# Infer from memory and plot.
+# ---------------------------------------------------------
 
 # @nnx.jit
 # def predict(model, x):
