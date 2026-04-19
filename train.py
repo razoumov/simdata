@@ -20,9 +20,10 @@ print(f"Found {len(inputFiles)} initial conditions to process.")
 
 # create two lists: initial conditions and solutions
 X_list, Y_list = [], []
-for initial in inputFiles:
+for i, initial in enumerate(inputFiles):
     runNumber = initial[-12:-8]
-    print(f"Reading run {runNumber}")
+    if (i+1)%100 == 0:
+        print(f"Reading run {runNumber}")
     solution = dir + "data/training/" + f"frame8{runNumber}0001.png"        
     img_x = Image.open(initial).convert('L')   # open image in grayscale (L) mode
     x_array = np.asarray(img_x, dtype=np.float32) / 255.0   # convert to NumPy array and normalize assuming 8-bit images
@@ -80,12 +81,12 @@ batchSize = 8
 numSamples = X.shape[0]
 
 for epoch in range(numEpochs):
-    perms = jax.random.permutation(jax.random.PRNGKey(epoch), numSamples)
-    X_shuffled, Y_shuffled = X[perms], Y[perms]
+    # perms = jax.random.permutation(jax.random.PRNGKey(epoch), numSamples)
+    # X_shuffled, Y_shuffled = X[perms], Y[perms] # to be used instead of X,Y below
     epoch_loss = []
     for i in range(0, numSamples, batchSize):
-        bx = X_shuffled[i : i + batchSize]
-        by = Y_shuffled[i : i + batchSize]
+        bx = X[i : i + batchSize]
+        by = Y[i : i + batchSize]
         loss = train_step(model, optimizer, bx, by)
         epoch_loss.append(loss)
     print(f"Epoch {epoch}, loss: {np.mean(epoch_loss):.6f}")
