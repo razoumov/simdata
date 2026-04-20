@@ -14,3 +14,4 @@ slurm*.out
 *.png
 __pycache__
 *.pdf
+cgan.py

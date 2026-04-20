@@ -58,6 +58,8 @@ initialState = jnp.array(x_array)[np.newaxis, ..., np.newaxis]
 # initialState = jnp.ones((1, 500, 500, 1))
 predictedSolution = predict(model, initialState).reshape(500, 500)
 
+# print(predictedSolution.min(), predictedSolution.max())
+
 fig = plt.figure(figsize=(5, 5), dpi=100)
 ax = fig.add_axes([0, 0, 1, 1])
 ax.imshow(predictedSolution, interpolation='nearest', cmap='viridis')
