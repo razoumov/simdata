@@ -59,10 +59,10 @@ match modelName:
         model = FNO2d(modes, width, in_channels=1, out_channels=1, rngs=rngs)
         # optimizer = nnx.Optimizer(model, optax.adam(learning_rate), wrt=nnx.Param)
         tx = optax.chain(
-            optax.clip_by_global_norm(1.0),    # clip gradients to a max global norm of 1.0
+            optax.clip_by_global_norm(1.0),   # clip gradients to a max global norm of 1.0
             optax.adam(learning_rate)
         )
-        optimizer = nnx.Optimizer(model, tx, rngs=rngs)
+        optimizer = nnx.Optimizer(model, tx, wrt=nnx.Param)
 
 # ---------------------------------------------------------
 # Define the training function.
