@@ -93,7 +93,7 @@ def train_step(model, optimizer, batch_x, batch_y):
 # ---------------------------------------------------------
 
 numEpochs = 500  # 500 default for a less noisy solution
-batchSize = 32    # default 8
+batchSize = 8    # default 8
 numSamples = X.shape[0]
 
 for epoch in range(numEpochs):
