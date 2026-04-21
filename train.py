@@ -54,15 +54,26 @@ match modelName:
         optimizer = nnx.Optimizer(model, optax.adam(1e-3), wrt=nnx.Param)
     case 3:
         from fourier import SpectralConv2d, FNO2d
-        modes, width, learning_rate = 12, 32, 1e-3
+        modes = 12   # default 12, number of Fourier components, bigger => higher res and larger snapshots
+        width = 32   # default 32, number of features each spatial point has an effect on
+        learning_rate = 1e-3
         rngs = nnx.Rngs(params=0)
         model = FNO2d(modes, width, in_channels=1, out_channels=1, rngs=rngs)
-        optimizer = nnx.Optimizer(model, optax.adam(learning_rate), wrt=nnx.Param)
-        # tx = optax.chain(
-        #     optax.clip_by_global_norm(1.0),   # clip gradients to a max global norm of 1.0
-        #     optax.adam(learning_rate)
-        # )
+        # ---
+        # optimizer = nnx.Optimizer(model, optax.adam(learning_rate), wrt=nnx.Param)
+        # ---
+        learningRateSchedule = optax.cosine_decay_schedule(init_value=1e-3, decay_steps=1000, alpha=0.1)
+        # optimizer = nnx.Optimizer(model, optax.adam(learningRateSchedule), wrt=nnx.Param)
+        # ---
+        # weight_decay = 1e-2
+        # tx = optax.adamw(learning_rate=learning_rate, weight_decay=weight_decay)
         # optimizer = nnx.Optimizer(model, tx, wrt=nnx.Param)
+        # ---
+        tx = optax.chain(
+            optax.clip_by_global_norm(1.0),   # clip gradients to a max global norm of 1.0
+            optax.adam(learningRateSchedule)
+        )
+        optimizer = nnx.Optimizer(model, tx, wrt=nnx.Param)
 
 # ---------------------------------------------------------
 # Define the training function.
@@ -82,16 +93,16 @@ def train_step(model, optimizer, batch_x, batch_y):
 # ---------------------------------------------------------
 
 numEpochs = 500  # 500 default for a less noisy solution
-batchSize = 8
+batchSize = 32    # default 8
 numSamples = X.shape[0]
 
 for epoch in range(numEpochs):
-    # perms = jax.random.permutation(jax.random.PRNGKey(epoch), numSamples)
-    # X_shuffled, Y_shuffled = X[perms], Y[perms] # to be used instead of X,Y below
+    perms = jax.random.permutation(jax.random.PRNGKey(epoch), numSamples)
+    X_shuffled, Y_shuffled = X[perms], Y[perms] # to be used instead of X,Y below
     epoch_loss = []
     for i in range(0, numSamples, batchSize):
-        bx = X[i : i + batchSize]
-        by = Y[i : i + batchSize]
+        bx = X_shuffled[i : i + batchSize]
+        by = Y_shuffled[i : i + batchSize]
         loss = train_step(model, optimizer, bx, by)
         epoch_loss.append(loss)
     print(f"Epoch {epoch}, loss: {np.mean(epoch_loss):.6f}")
