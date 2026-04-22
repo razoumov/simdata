@@ -62,16 +62,18 @@ match modelName:
         # ---
         # optimizer = nnx.Optimizer(model, optax.adam(learning_rate), wrt=nnx.Param)
         # ---
-        learningRateSchedule = optax.cosine_decay_schedule(init_value=1e-3, decay_steps=1000, alpha=0.1)
+        # learningRateSchedule = optax.cosine_decay_schedule(init_value=1e-3, decay_steps=1000, alpha=0.1)
         # optimizer = nnx.Optimizer(model, optax.adam(learningRateSchedule), wrt=nnx.Param)
         # ---
         # weight_decay = 1e-2
         # tx = optax.adamw(learning_rate=learning_rate, weight_decay=weight_decay)
         # optimizer = nnx.Optimizer(model, tx, wrt=nnx.Param)
         # ---
+        learningRateSchedule = optax.cosine_decay_schedule(init_value=1e-3, decay_steps=2000, alpha=0.1)
         tx = optax.chain(
             optax.clip_by_global_norm(1.0),   # clip gradients to a max global norm of 1.0
-            optax.adam(learningRateSchedule)
+            # optax.adam(learningRateSchedule)
+            optax.adamw(learning_rate=learningRateSchedule, weight_decay=1e-4)
         )
         optimizer = nnx.Optimizer(model, tx, wrt=nnx.Param)
 
