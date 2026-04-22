@@ -15,3 +15,4 @@ slurm*.out
 __pycache__
 *.pdf
 cgan.py
+converged.py
