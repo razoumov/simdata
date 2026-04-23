@@ -28,12 +28,12 @@ class SpectralConv2d(nnx.Module):
         # Multiply relevant Fourier modes
         out_ft = jnp.zeros((batch, self.out_channels, h, w // 2 + 1), dtype=jnp.complex64) # creates a blank canvas
                                                                                # in the frequency domain
-        # top left corner
+        # top left corner of the frequency domain
         res1 = jnp.einsum("bixy,ioxy->boxy", x_ft[:, :, :self.modes1, :self.modes2], self.weights1) # matrix
                                     # multiplication between the input frequencies and the learnable weights
                                     # across the input (i) and output (o) channels
         out_ft = out_ft.at[:, :, :self.modes1, :self.modes2].set(res1)
-        # bottom left corner
+        # bottom left corner of the frequency domain
         res2 = jnp.einsum("bixy,ioxy->boxy", x_ft[:, :, -self.modes1:, :self.modes2], self.weights2)
         out_ft = out_ft.at[:, :, -self.modes1:, :self.modes2].set(res2)
         # as for the top/bottom right corners, they are redundant, so no need to store them
@@ -47,13 +47,13 @@ class SpectralConv2d(nnx.Module):
 class FNO2d(nnx.Module):   # high-level architecture to stack several Spectral Convolutions layers
     def __init__(self, modes, width, in_channels, out_channels, rngs: nnx.Rngs):
         # lift the input data into a higher-dim space (width) so the model has more "room" to learn complex features
-        self.fc0 = nnx.Linear(in_channels, width, rngs=rngs)
+        self.fc0 = nnx.Linear(in_channels, width, rngs=rngs)   # first, fully connected layer
         # four spectral convolution layers
         self.conv0 = SpectralConv2d(width, width, modes, modes, rngs=rngs)
         self.conv1 = SpectralConv2d(width, width, modes, modes, rngs=rngs)
         self.conv2 = SpectralConv2d(width, width, modes, modes, rngs=rngs)
         self.conv3 = SpectralConv2d(width, width, modes, modes, rngs=rngs)
-        # skip connections: standard linear layers applied in the spatial domain
+        # skip connections: standard linear (fully connected) layers applied in the spatial domain
         self.w0 = nnx.Linear(width, width, rngs=rngs)
         self.w1 = nnx.Linear(width, width, rngs=rngs)
         self.w2 = nnx.Linear(width, width, rngs=rngs)
@@ -61,7 +61,7 @@ class FNO2d(nnx.Module):   # high-level architecture to stack several Spectral C
         # projection layers: squeeze high-dim space back down to the desired output size
         self.fc1 = nnx.Linear(width, 128, rngs=rngs)
         self.fc2 = nnx.Linear(128, out_channels, rngs=rngs)
-    def __call__(self, x):
+    def __call__(self, x):   # make FNO2d class a function
         # x: (batch, h, w, in_channels)
         x = self.fc0(x)
         # FNO iterations
