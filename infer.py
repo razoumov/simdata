@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import sys
 from pathlib import Path
 
-modelName = 3
+modelName = 1
 
 # ---------------------------------------------------------
 # Define the model.
@@ -17,6 +17,8 @@ modelName = 3
 match modelName:
     case 1:
         from unetSimple import UNet
+        rngs = nnx.Rngs(0)   # to provide random keys to initialize the parameters
+        model = UNet(rngs=rngs)
     case 2:
         from unetComplex import UNet, UNetBlock
         rngs = nnx.Rngs(0)

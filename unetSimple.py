@@ -1,17 +1,21 @@
+import jax
+import jax.numpy as jnp
+from flax import nnx
+
 # Define the model (NNX). We will build a simplified U-Net. NNX allows us to define models as Python classes
 # that hold their own state, making the code much cleaner than traditional functional JAX.
 
 class UNet(nnx.Module):
-    def __init__(self, in_features, out_features, rngs: nnx.Rngs):
+    def __init__(self, rngs: nnx.Rngs):
         # define the model layers
         # Downsampling
-        self.c1 = nnx.Conv(in_features, 32, kernel_size=(3, 3), rngs=rngs)
+        self.c1 = nnx.Conv(1, 32, kernel_size=(3, 3), rngs=rngs)
         self.c2 = nnx.Conv(32, 64, kernel_size=(3, 3), strides=2, rngs=rngs)
         # Bottleneck
         self.bottleneck = nnx.Conv(64, 64, kernel_size=(3, 3), rngs=rngs)
         # Upsampling
         self.up = nnx.ConvTranspose(64, 32, kernel_size=(3, 3), strides=2, rngs=rngs)
-        self.out = nnx.Conv(32, out_features, kernel_size=(3, 3), rngs=rngs)
+        self.out = nnx.Conv(32, 1, kernel_size=(3, 3), rngs=rngs)
     def __call__(self, x):
         # define the forward pass
         # Encoder
