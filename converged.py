@@ -116,6 +116,7 @@ modes = 12
 width = 32
 learning_rate = 1e-3
 rngs = nnx.Rngs(params=0)
+master_key = jax.random.key(1)
 
 # Initialize Model & Optimizer
 model = FNO2d(modes, width, rngs=rngs)
