@@ -8,13 +8,13 @@ from PIL import Image
 import orbax.checkpoint as ocp
 
 modelName = 3
+dir = "/scratch/razoumov/jax/"
 
 # ---------------------------------------------------------
 # Load the image pairs for training.
 # ---------------------------------------------------------
 
 # find all initial condition files matching frame8****0000.png
-dir = "/scratch/razoumov/jax/"
 inputFiles = sorted(glob.glob(dir+"data/training/frame8*0000.png"))
 print(f"Found {len(inputFiles)} initial conditions to process.")
 
@@ -112,8 +112,8 @@ for epoch in range(numEpochs):
     graph, state = nnx.split(model)   # extract the state from NNX
     checkpointer = ocp.StandardCheckpointer()
     if (epoch+1)%10 == 0:
-        print('/scratch/razoumov/jax/weights%03d'%(epoch))
-        checkpointer.save('/scratch/razoumov/jax/weights%03d'%(epoch), state)
+        print(dir+'weights%03d'%(epoch))
+        checkpointer.save(dir+'weights%03d'%(epoch), state)
 
 checkpointer.wait_until_finished()   # wait for the save thread to finish writing to disk
 
@@ -122,7 +122,6 @@ checkpointer.wait_until_finished()   # wait for the save thread to finish writin
 # ---------------------------------------------------------
 
 # dirname="weights009"
-# dir = "/scratch/razoumov/jax/"
 # checkpointer = ocp.StandardCheckpointer()
 # graph, state = nnx.split(model)
 # restored_state = checkpointer.restore(dir+dirname, target=state)   # restore the state
