@@ -44,7 +44,7 @@ print(f"Data shapes: X={X.shape}, Y={Y.shape}")
 match modelName:
     case 1:
         from unetSimple import UNet
-        rngs = nnx.Rngs(0)
+        rngs = nnx.Rngs(0)   # to provide random keys to initialize the parameters
         model = UNet(in_features=1, out_features=1, rngs=rngs)
         optimizer = nnx.Optimizer(model, optax.adam(1e-3), wrt=nnx.Param)
         # wrt=nnx.Param => only apply gradients to objects marked as parameters (like weights and biases)
@@ -61,7 +61,8 @@ match modelName:
         rngs = nnx.Rngs(params=0)
         model = FNO2d(modes, width, rngs=rngs)
         # ---
-        optimizer = nnx.Optimizer(model, optax.adam(learning_rate), wrt=nnx.Param)
+        gradientTransformation = optax.adam(learning_rate)
+        optimizer = nnx.Optimizer(model, gradientTransformation, wrt=nnx.Param)
         # ---
         # learningRateSchedule = optax.cosine_decay_schedule(init_value=1e-3, decay_steps=1000, alpha=0.1)
         # optimizer = nnx.Optimizer(model, optax.adam(learningRateSchedule), wrt=nnx.Param)
@@ -84,8 +85,9 @@ match modelName:
 
 @nnx.jit
 def train_step(model, optimizer, batch_x, batch_y):
+    # wrap the loss, gradient calculation and update into a single training step function
     def loss_fn(model):
-        y_pred = model(batch_x)
+        y_pred = model(batch_x)   # forward pass
         return jnp.mean((y_pred - batch_y)**2)   # mean squared error for residuals
     loss, grads = nnx.value_and_grad(loss_fn)(model)
     optimizer.update(model, grads)

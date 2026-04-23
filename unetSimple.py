@@ -3,6 +3,7 @@
 
 class UNet(nnx.Module):
     def __init__(self, in_features, out_features, rngs: nnx.Rngs):
+        # define the model layers
         # Downsampling
         self.c1 = nnx.Conv(in_features, 32, kernel_size=(3, 3), rngs=rngs)
         self.c2 = nnx.Conv(32, 64, kernel_size=(3, 3), strides=2, rngs=rngs)
@@ -12,6 +13,7 @@ class UNet(nnx.Module):
         self.up = nnx.ConvTranspose(64, 32, kernel_size=(3, 3), strides=2, rngs=rngs)
         self.out = nnx.Conv(32, out_features, kernel_size=(3, 3), rngs=rngs)
     def __call__(self, x):
+        # define the forward pass
         # Encoder
         x1 = nnx.relu(self.c1(x))
         x2 = nnx.relu(self.c2(x1))
