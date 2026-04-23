@@ -47,6 +47,7 @@ match modelName:
         rngs = nnx.Rngs(0)
         model = UNet(in_features=1, out_features=1, rngs=rngs)
         optimizer = nnx.Optimizer(model, optax.adam(1e-3), wrt=nnx.Param)
+        # wrt=nnx.Param => only apply gradients to objects marked as parameters (like weights and biases)
     case 2:
         from unetComplex import UNet, UNetBlock
         rngs = nnx.Rngs(0)
