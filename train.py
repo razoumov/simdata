@@ -58,7 +58,7 @@ match modelName:
         width = 32   # default 32, number of features each spatial point has an effect on
         learning_rate = 1e-3
         rngs = nnx.Rngs(params=0)
-        model = FNO2d(modes, width, in_channels=1, out_channels=1, rngs=rngs)
+        model = FNO2d(modes, width, rngs=rngs)
         # ---
         # optimizer = nnx.Optimizer(model, optax.adam(learning_rate), wrt=nnx.Param)
         # ---
