@@ -78,9 +78,9 @@ class SpectralConv2d(nnx.Module):
 # 2. Full FNO Model
 # ---------------------------------------------------------
 class FNO2d(nnx.Module):
-    def __init__(self, modes, width, in_channels, out_channels, rngs: nnx.Rngs):
+    def __init__(self, modes, width, rngs: nnx.Rngs):
         # Lifting Layer
-        self.fc0 = nnx.Linear(in_channels, width, rngs=rngs)
+        self.fc0 = nnx.Linear(1, width, rngs=rngs)
         # Spectral Layers
         self.conv0 = SpectralConv2d(width, width, modes, modes, rngs=rngs)
         self.conv1 = SpectralConv2d(width, width, modes, modes, rngs=rngs)
@@ -93,9 +93,9 @@ class FNO2d(nnx.Module):
         self.w3 = nnx.Linear(width, width, rngs=rngs)
         # Projection Layers
         self.fc1 = nnx.Linear(width, 128, rngs=rngs)
-        self.fc2 = nnx.Linear(128, out_channels, rngs=rngs)
+        self.fc2 = nnx.Linear(128, 1, rngs=rngs)
     def __call__(self, x):
-        # x: (batch, h, w, in_channels)
+        # x: (batch, h, w, 1)
         x = self.fc0(x)
         # FNO Iterations
         x1 = self.conv0(x) + self.w0(x)
@@ -118,7 +118,7 @@ learning_rate = 1e-3
 rngs = nnx.Rngs(params=0)
 
 # Initialize Model & Optimizer
-model = FNO2d(modes, width, in_channels=1, out_channels=1, rngs=rngs)
+model = FNO2d(modes, width, rngs=rngs)
 optimizer = nnx.Optimizer(model, optax.adam(learning_rate), wrt=nnx.Param)
 
 @nnx.jit
