@@ -27,7 +27,7 @@ match modelName:
         modes = 12   # default 12
         width = 32   # default 32
         rngs = nnx.Rngs(params=0)
-        model = FNO2d(modes, width, in_channels=1, out_channels=1, rngs=rngs)
+        model = FNO2d(modes, width, rngs=rngs)
 
 # ---------------------------------------------------------
 # Read the checkpoint
