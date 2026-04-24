@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image
 import orbax.checkpoint as ocp
 
-modelName = 3
+modelName = 4
 dir = "/scratch/razoumov/jax/"
 
 # ---------------------------------------------------------
@@ -43,17 +43,22 @@ print(f"Data shapes: X={X.shape}, Y={Y.shape}")
 
 match modelName:
     case 1:
+        from caeSimple import CAE
+        rngs = nnx.Rngs(0)   # to provide random keys to initialize the parameters
+        model = CAE(rngs=rngs)
+        optimizer = nnx.Optimizer(model, optax.adam(1e-3), wrt=nnx.Param)
+        # wrt=nnx.Param => only apply gradients to objects marked as parameters (like weights and biases)
+    case 2:
         from unetSimple import UNet
         rngs = nnx.Rngs(0)   # to provide random keys to initialize the parameters
         model = UNet(rngs=rngs)
         optimizer = nnx.Optimizer(model, optax.adam(1e-3), wrt=nnx.Param)
-        # wrt=nnx.Param => only apply gradients to objects marked as parameters (like weights and biases)
-    case 2:
+    case 3:
         from unetComplex import UNet, UNetBlock
         rngs = nnx.Rngs(0)
         model = UNet(in_features=1, out_features=1, rngs=rngs)
         optimizer = nnx.Optimizer(model, optax.adam(1e-3), wrt=nnx.Param)
-    case 3:
+    case 4:
         from fourier import SpectralConv2d, FNO2d
         modes = 12   # default 12, number of Fourier components, bigger => higher res and larger snapshots
         width = 32   # default 32, number of features each spatial point has an effect on

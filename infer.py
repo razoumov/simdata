@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import sys
 from pathlib import Path
 
-modelName = 1
+modelName = 4
 
 # ---------------------------------------------------------
 # Define the model.
@@ -16,14 +16,18 @@ modelName = 1
 
 match modelName:
     case 1:
-        from unetSimple import UNet
+        from caeSimple import CAE
         rngs = nnx.Rngs(0)   # to provide random keys to initialize the parameters
-        model = UNet(rngs=rngs)
+        model = CAE(rngs=rngs)
     case 2:
-        from unetComplex import UNet, UNetBlock
+        from unetSimple import UNet
         rngs = nnx.Rngs(0)
         model = UNet(in_features=1, out_features=1, rngs=rngs)
     case 3:
+        from unetComplex import UNet, UNetBlock
+        rngs = nnx.Rngs(0)
+        model = UNet(in_features=1, out_features=1, rngs=rngs)
+    case 4:
         from fourier import SpectralConv2d, FNO2d
         # Hyperparameters
         modes = 12   # default 12
