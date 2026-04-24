@@ -19,5 +19,5 @@ class UNet(nnx.Module):
         x2 = nnx.relu(self.c2(x1))
         x3 = nnx.relu(self.bottleneck(x2))   # the bottleneck
         x4 = nnx.relu(self.up(x3))   # the decoder (upsampling)
-        # x4 = jnp.concatenate([x4, x1], axis=-1)   # skip connections the first layer
+        # x4 = jnp.concatenate([x4, x1], axis=-1)   # skip connection to the first layer
         return jax.nn.sigmoid(self.out(x4)) # back to 1 channel, sigmoid ensures all values are between 0 and 1
