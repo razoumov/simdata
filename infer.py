@@ -22,11 +22,14 @@ match modelName:
     case 2:
         from unetSimple import UNet
         rngs = nnx.Rngs(0)
-        model = UNet(in_features=1, out_features=1, rngs=rngs)
+        model = UNet(rngs=rngs)
     case 3:
-        from unetComplex import UNet, UNetBlock
+        # from unetComplex import UNet, UNetBlock
+        # rngs = nnx.Rngs(0)
+        # model = UNet(in_features=1, out_features=1, rngs=rngs)
+        from unetReal import UNet, ConvBlock
         rngs = nnx.Rngs(0)
-        model = UNet(in_features=1, out_features=1, rngs=rngs)
+        model = UNet(rngs=rngs)
     case 4:
         from fourier import SpectralConv2d, FNO2d
         # Hyperparameters

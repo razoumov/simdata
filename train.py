@@ -64,7 +64,7 @@ match modelName:
         optimizer = nnx.Optimizer(model, optax.adam(1e-3), wrt=nnx.Param)
     case 4:
         from fourier import SpectralConv2d, FNO2d
-        modes = 12   # default 12, number of Fourier components, bigger => higher res and larger snapshots
+        modes = 12   # default 12, number of Fourier components to keep; bigger => higher res and larger snapshots
         width = 32   # default 32, number of features each spatial point has an effect on
         learning_rate = 1e-3
         rngs = nnx.Rngs(params=0)
