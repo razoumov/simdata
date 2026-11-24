@@ -4,6 +4,7 @@ config const n = 500, nt = 250, nout = 250; // resolution, max time steps, plott
 const a = 0.1;   // 0.1 - thick front, no post-wave oscillations; 0.5 - narrow front, large oscillations
 config const animation = true;
 config const model = 1, nruns = 1;
+config const npmax = 1; // maximum number of randomly placed points in model 8
 
 var h = 1.0 / (n-1), coef = -(a/h)**2;
 
@@ -54,7 +55,7 @@ for run in 1..nruns {
     when 8 do {
       // 1-5 randomly placed points
       var rint = new randomStream(int);
-      var np = rint.next(min=1, max=1);   // default max=5
+      var np = rint.next(min=1, max=npmax);
       var rreal = new randomStream(real);
       var sources: [1..np] (real, real);
       for i in 1..np do
