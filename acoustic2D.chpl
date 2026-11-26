@@ -3,7 +3,7 @@ use Random;
 config const n = 500, nt = 250, nout = 250; // resolution, max time steps, plotting frequency
 const a = 0.1;   // 0.1 - thick front, no post-wave oscillations; 0.5 - narrow front, large oscillations
 config const animation = true;
-config const model = 1, nruns = 1;
+config const model = 1, nruns = 1, firstrun=1;
 config const npmax = 1; // maximum number of randomly placed points in model 8
 
 var h = 1.0 / (n-1), coef = -(a/h)**2;
@@ -17,7 +17,7 @@ var Vx, Vy, P, tmp: [largerMesh] real;
 
 var watch: stopwatch;
 watch.start();
-for run in 1..nruns {
+for run in firstrun..#nruns {
   P = 0;
   Vx = 0;
   Vy = 0;
@@ -102,8 +102,9 @@ for run in 1..nruns {
     }
     forall (i,j) in mesh do
       P[i,j] -= dt * (Vx[i+1,j] - Vx[i,j] + Vy[i,j+1] - Vy[i,j]) / h;
-    if step%nout == 0 && animation then plotPressure(step/nout,run);
+    if step%nout == 0 && animation then plotPressure(step,run);
   }
+  writeln("finished run ", run);
 }
 watch.stop();
 writeln('Simulation took ', watch.elapsed(), ' seconds');
@@ -131,7 +132,7 @@ proc plotPressure(step,run) {
   }
   var smin = min reduce(output);
   var smax = max reduce(output);
-  writeln(smin, "  ", smax);
+  // writeln(smin, "  ", smax);
   for i in 1..n {
     for j in 1..n {
       var idx = ((output[j,n-i+1]-smin)/(smax-smin)*255):int + 1; //scale to 1..256
@@ -140,6 +141,6 @@ proc plotPressure(step,run) {
   }
   var pixels = colorToPixel(colour);   // array of pixels
   var filename = "m" + model:string + "r" + fourDigits(run) + "s" + fourDigits(step)+".png";
-  writeln("writing ", filename);
+  // writeln("writing ", filename);
   writeImage(filename, imageType.png, pixels);
 }
