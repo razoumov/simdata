@@ -26,10 +26,10 @@ class RelativeL2Loss(nn.Module):
 # ==========================================
 
 dir = "/home/user01/simdata/data"
-initialConditions = sorted(glob(os.path.join(dir, "training", "m8r*s0000.png")))
-runs = [os.path.basename(ic)[3:7] for ic in initialConditions]
-timeSteps = sorted(glob(os.path.join(dir, "training", "m8r0001s*.png")))
-steps = [os.path.basename(ts)[8:12] for ts in timeSteps]
+initialConditions = sorted(glob(os.path.join(dir, "training", "r*s0000.png")))
+runs = [os.path.basename(ic)[1:5] for ic in initialConditions]
+timeSteps = sorted(glob(os.path.join(dir, "training", "r0001s*.png")))
+steps = [os.path.basename(ts)[6:10] for ts in timeSteps]
 
 nruns, nsteps = len(runs), len(steps)
 nx, ny = np.asarray(Image.open(initialConditions[0]).convert("L"), dtype=np.float32).shape   # image spatial dimensions
@@ -38,10 +38,10 @@ xdata = np.zeros((nruns, 1, nx, ny), dtype=np.float32)        # initial conditio
 ydata = np.zeros((nruns, nsteps, nx, ny), dtype=np.float32)   # 50 timesteps
 
 for r, run in enumerate(tqdm(runs, desc="Loading training data")):
-    initial = os.path.join(dir, "training", f"m8r{run}s0000.png")
+    initial = os.path.join(dir, "training", f"r{run}s0000.png")
     xdata[r, 0] = np.asarray(Image.open(initial).convert("L"), dtype=np.float32) / 255.0
     for s, step in enumerate(steps):
-        timestep = os.path.join(dir, "training", f"m8r{run}s{step}.png")
+        timestep = os.path.join(dir, "training", f"r{run}s{step}.png")
         ydata[r, s] = np.asarray(Image.open(timestep).convert("L"), dtype=np.float32) / 255.0
 
 xdata, ydata = torch.from_numpy(xdata), torch.from_numpy(ydata)
@@ -84,6 +84,6 @@ for epoch in range(1, epochs + 1):
     if epoch == 1 or epoch % 10 == 0 or epoch == epochs:
         print(f"Epoch [{epoch:03d}/{epochs:03d}] - Rel L2 Loss: {avg_loss:.6f}")
 
-checkpointFile = os.path.join(dir, "a01.pt")
+checkpointFile = os.path.join(dir, "a04.pt")
 torch.save(model.state_dict(), checkpointFile)
 print("Saved model weights to", checkpointFile)
