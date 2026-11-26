@@ -139,7 +139,7 @@ proc plotPressure(step,run) {
     }
   }
   var pixels = colorToPixel(colour);   // array of pixels
-  var filename = "frame" + model:string + fourDigits(run) + fourDigits(step)+".png";
+  var filename = "model" + model:string + "run" + fourDigits(run) + "step" + fourDigits(step)+".png";
   writeln("writing ", filename);
   writeImage(filename, imageType.png, pixels);
 }
